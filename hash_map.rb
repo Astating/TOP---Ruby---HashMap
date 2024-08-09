@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'linked_list'
+require_relative "linked_list"
 
 # TODO
 class HashMap
   PRIME_NUMBER = 31
-  LOAD_FACTOR = 0.75
+  LOAD_FACTOR = 0.8
 
   def initialize(bucket_capacity = 16)
     @bucket_capacity = bucket_capacity
@@ -41,7 +41,7 @@ class HashMap
   end
 
   def clear
-    initialize()
+    initialize
   end
 
   def keys
@@ -55,26 +55,26 @@ class HashMap
   def entries
     @buckets.reduce([]) { |acc, bucket| acc.push(*bucket.entries) }
   end
-  
+
   private
 
   def load
-    length / @bucket_capacity
+    length.fdiv(@bucket_capacity)
   end
 
   def grow_bucket_capacity_if_needed
     return unless load > LOAD_FACTOR
 
-    oldEntries = entries
+    old_entries = entries
     initialize(@bucket_capacity * 2)
-    oldEntries.each { |key_value| set(*key_value) }
+    old_entries.each { |key_value| set(*key_value) }
   end
 
   def decrease_bucket_capacity_if_needed
     return unless load < LOAD_FACTOR / 2 && @bucket_capacity > 16
 
-    oldEntries = entries
+    old_entries = entries
     initialize(@bucket_capacity / 2)
-    oldEntries.each { |key_value| set(*key_value) }
+    old_entries.each { |key_value| set(*key_value) }
   end
 end
