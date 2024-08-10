@@ -15,92 +15,53 @@ class LinkedList
   end
 
   def set(key, value)
-    node = @root
+    node = find_node_by_key(key)
 
-    while node
-      node.key_value = [key, value] and return if node.key_value[0] == key
-
-      node = node&.next_node
+    if node
+      node.key_value[1] = value
+    else
+      prepend([key, value])
     end
 
-    prepend([key, value])
+    self
   end
 
   def get(key)
-    node = @root
-
-    while node
-      return node.key_value[1] if node.key_value[0] == key
-
-      node = node&.next_node
-    end
-
-    nil
+    find_node_by_key(key)&.key_value&.at(1)
   end
 
   def remove(key)
-    node = @root
-    index = 0
-
-    while node
-      remove_at(index) and return if node.key_value[0] == key
-
-      index += 1
-      node = node.next_node
+    if @root&.key_value&.at(0) == key
+      removed = @root.key_value[1]
+      @root = @root.next_node
+      return removed
     end
 
-    nil
+    prev_node = find_node { |n| n&.next_node&.key_value&.at(0) == key }
+
+    return nil unless prev_node
+
+    removed = prev_node.next_node.key_value[1]
+
+    prev_node.next_node = prev_node.next_node.next_node
+
+    removed
   end
 
   def size
-    node = @root
-    size = 0
-
-    while node
-      size += 1
-      node = node.next_node
-    end
-
-    size
+    entries.length
   end
 
   def keys
-    node = @root
-    keys = []
-
-    while node&.key_value
-      keys << node.key_value[0]
-
-      node = node&.next_node
-    end
-
-    keys
+    map_nodes { |n| n.key_value[0] }
   end
 
   def values
-    node = @root
-    values = []
-
-    while node&.key_value
-      values << node.key_value[1]
-
-      node = node&.next_node
-    end
-
-    values
+    map_nodes { |n| n.key_value[1] }
   end
 
   def entries
-    node = @root
-    entries = []
-
-    while node&.key_value
-      entries << node.key_value
-
-      node = node&.next_node
-    end
-
-    entries
+    map_nodes(&:key_value)
   end
 
   private
@@ -109,24 +70,31 @@ class LinkedList
     @root = Node.new(key_value, @root)
   end
 
-  def remove_at(index)
-    return @root = @root&.next_node if index.zero?
-
-    prev_node = at(index - 1)
-    return unless prev_node&.next_node
-
-    prev_node.next_node = prev_node.next_node.next_node
-  end
-
-  def at(index)
+  def find_node
     node = @root
 
-    index.times do
-      return unless node
+    while node
+      return node if yield(node)
 
-      node = node&.next_node
+      node = node.next_node
     end
 
-    node
+    nil
+  end
+
+  def find_node_by_key(key)
+    find_node { |n| n.key_value[0] == key }
+  end
+
+  def map_nodes
+    node = @root
+    result = []
+
+    while node
+      result << yield(node)
+      node = node.next_node
+    end
+
+    result
   end
 end
